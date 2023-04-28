@@ -1,0 +1,176 @@
+<!DOCTYPE>
+<html>
+    <head>
+      <!-- Document Title -->
+        <title>Pokemon Of The Day</title>
+        <link rel="shortcut icon" href="#">
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script>
+            tailwind.config = {
+              theme: {
+                extend: {
+                    dropShadow: {
+                        'shiny': '0 0 10px rgba(0, 220, 255, 0.25)',
+                    },
+                    keyframes: {
+                        bounce2: {
+                            '0%, 20%, 50%, 80%, 100%': { transform: 'translateY(0)' },
+                            '40%': {transform: 'translateY(-30px)'},
+                            '60%': {transform: 'translateY(-15px)'},
+                        },
+                        wiggle: {
+                        '0%, 100%': { transform: 'rotate(-3deg)' },
+                        '50%': { transform: 'rotate(3deg)' },
+                        },
+                        bounce: {
+                            '0%, 100%': { transform: 'translateY(-25%)' },
+                            '50%': { 
+                                transform: 'translateY(0)',
+                            }
+                            }
+                        },
+
+                    animation: {
+                        bounce: "bounce 1s ease-in-out infinite",
+                        bounce2: "bounce2 2s ease infinite"
+                 }
+                    },
+                }
+            }
+          </script>
+        <link href=" https://cdn.jsdelivr.net/npm/@mdi/font@7.2.96/css/materialdesignicons.min.css " rel="stylesheet">
+    </head>
+    <body>
+        <div class="my-auto h-screen">
+            <h2 class="text-2xl font-bold text-center mt-32 mb-12" id="date"></h2>
+            <div id="reroll" class="text-xl font-bold text-white mx-auto text-center p-6 rounded-xl mb-12 bg-red-500 w-64 shadow-xl hover:bg-red-600" role="button">
+                Hatch New Egg
+            </div>
+            <div class="flex justify-center my-auto h-72" id="pokedex">
+                        <!-- <span id="prev" class="text-gray-500 my-auto text-5xl mdi mdi-arrow-left-drop-circle-outline"></span> -->
+                        <div id='card' class="group h-72 w-64 my-auto bg-gray-100 px-6 py-2  rounded-3xl shadow-2xl">
+                            <h2 id="name" class="text-center font-bold text-xl capitalize">????</h2>
+                            <h2 id="number" class="text-center font-bold text-xl "># ????</h2>
+                            <img role="button" id="egg" data-img='' class="my-8 m-auto h-36 animate-bounce2" src="./resources/egg.png" alt="">
+                            <p id="type" class="text-center text-lg capitalize rounded-2xl"></p>
+                        </div>
+                        <!-- <span id="next" class="text-gray-500 text-5xl my-auto mdi mdi-arrow-right-drop-circle-outline"></span> -->
+            </div>
+        </div>
+        <script>
+            setDate();
+            let egg= document.getElementById('egg')
+            let reroll= document.getElementById('reroll')
+            egg.addEventListener("click", hatchEgg);
+            reroll.addEventListener("click", () => {
+                setEgg(true);
+            });
+            setEgg(false, 'egg');
+            setTimeout(function(){
+                // egg.click();
+            },
+            500);
+
+            function setDate(currentDate = ''){
+                let date = new Date().toDateString();
+                if(!!currentDate){
+                    date = new Date(currentDate);
+                }
+                document.getElementById('date').innerHTML = date;
+            }
+
+            async function fetchPokemon(){
+                const TOTAL_POKES = 1015;
+                let pOTD = Math.floor(Math.random() * TOTAL_POKES);
+                const url = `https://pokeapi.co/api/v2/pokemon/${pOTD}`;
+                let promise = fetch(url).then((res) => res.json());
+
+                return await promise;
+            };
+
+            function applyTypes(typeStr){
+                    const typeColors = { 'fire': 'red-600', 'water': 'blue-600', 'grass': 'green-600', 'electric': 'yellow-300', 
+                    'poison': 'purple-800', 'ground': 'orange-900', 'ice': 'cyan-200', 'rock': 'stone-700', 'psychic': 'fuchsia-500',
+                    'ghost': 'violet-600', 'normal': 'gray-300', 'fairy': 'pink-300', 'dragon': 'indigo-500', 'steel': 'slate-400',
+                    'dark': 'stone-900', 'bug': 'lime-400', 'fighting': 'orange-600', 'flying': 'sky-300' };
+
+                    const typeTextColors = { 'fire': 'white', 'water': 'white', 'grass': 'white', 'electric': 'black', 'poison': 'white',
+                    'ground': 'white', 'ice': 'black', 'rock': 'white', 'psychic': 'white', 'ghost': 'white', 'normal': 'black','fairy': 'white',
+                    'dragon': 'white', 'steel': 'white', 'dark': 'white', 'bug': 'black', 'fighting': 'white', 'flying': 'white' };
+
+                let typeBoxes = '<div class="flex gap-4 justify-center row">';
+                typeStr.split(' ').forEach((type) => {
+                    typeBoxes += `<div class="rounded-xl p-4 bg-${typeColors[type]} text-${typeTextColors[type]} Capitalize">${type}</div>`;
+                });
+                typeBoxes += '</div>';
+                document.getElementById('type').innerHTML = typeBoxes;
+
+            }
+
+            function hatchEgg(eggID = 'egg'){
+                const hatchingEgg = document.getElementById('egg');
+                document.getElementById('name').innerHTML = hatchingEgg.dataset.name;
+                document.getElementById('number').innerHTML = `# ${hatchingEgg.dataset.number}`;
+                hatchingEgg.src = hatchingEgg.dataset.img;
+                applyTypes(hatchingEgg.dataset.type);
+                hatchingEgg.classList.remove('animate-bounce2');
+                hatchingEgg.classList.add('group-hover:animate-bounce2');
+                if(hatchingEgg.dataset.shiny){
+                    celebrateShiny();
+                }
+            }
+
+            function celebrateShiny(){
+                    document.getElementById('number').classList.add('animate-pulse');
+                    document.getElementById('name').classList.add('animate-pulse');
+                    document.getElementById('card').classList.add('drop-shadow-shiny');
+                    document.getElementById('card').classList.remove('bg-gray-100');
+                    document.getElementById('card').classList.add('bg-white');
+                    document.getElementById('egg').classList.add('animate-bounce2');
+            }
+
+            function clearShinyFlair(){
+                    document.getElementById('number').classList.remove('animate-pulse');
+                    document.getElementById('name').classList.remove('animate-pulse');
+                    document.getElementById('card').classList.remove('drop-shadow-shiny');
+                    document.getElementById('card').classList.add('bg-gray-100');
+                    document.getElementById('card').classList.remove('bg-white');
+                    document.getElementById('egg').classList.remove('animate-bounce2');
+            }
+
+            function setEgg(isHatch, eggID = 'egg'){
+                const hatchingEgg = document.getElementById('egg');
+                let pokemonObj = {};
+
+                let promise = fetchPokemon();
+                promise.then((result) => {
+                    const SHINY_CHANCE = 100;
+                    let isShiny = Boolean(Math.floor(Math.random() * SHINY_CHANCE) == 50);
+                    let shiny = 'default';
+                    if (isShiny){
+                        console.log('SHINY');
+                        shiny = 'shiny';
+                        hatchingEgg.dataset.shiny = true; 
+                    }
+                    pokemonObj =  {
+                            name: result.name,
+                            image: result.sprites.other['official-artwork'][`front_${shiny}`],
+                            type: result.types.map((type) => type.type.name).join(' '),
+                            id: result.id
+                        };
+
+
+                        hatchingEgg.dataset.name = pokemonObj.name;
+                        hatchingEgg.dataset.number = String(pokemonObj.id).padStart(4, '0');
+                        hatchingEgg.dataset.img = pokemonObj.image;
+                        hatchingEgg.dataset.type = pokemonObj.type;
+
+                        if(isHatch){
+                            hatchEgg();
+                        }
+                });
+            };
+
+        </script>
+    </body>
+</html>
