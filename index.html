@@ -46,24 +46,48 @@
             <div id="reroll" class="text-xl font-bold text-white mx-auto text-center p-6 rounded-xl mb-12 bg-red-500 w-64 shadow-xl hover:bg-red-600" role="button">
                 Hatch New Egg
             </div>
+            <div class="flex justify-center py-2 gap-2 items-center">
+                <label for="isSprite">Sprite Version</label>
+                <input class="text-center" type="checkbox" name="isSprite" id="isSprite">
+            </div>
             <div class="flex justify-center my-auto h-72" id="pokedex">
                         <!-- <span id="prev" class="text-gray-500 my-auto text-5xl mdi mdi-arrow-left-drop-circle-outline"></span> -->
                         <div id='card' class="group h-72 w-64 my-auto bg-gray-100 px-6 py-2  rounded-3xl shadow-2xl">
                             <h2 id="name" class="text-center font-bold text-xl capitalize">????</h2>
                             <h2 id="number" class="text-center font-bold text-xl "># ????</h2>
-                            <img role="button" id="egg" data-img='' class="my-8 m-auto h-36 animate-bounce2" src="./resources/egg.png" alt="">
+                            <img role="button" id="egg" data-img='' data-isegg='true' class="my-8 m-auto h-36 animate-bounce2" src="./resources/egg.png" alt="">
                             <p id="type" class="text-center text-lg capitalize rounded-2xl"></p>
                         </div>
                         <!-- <span id="next" class="text-gray-500 text-5xl my-auto mdi mdi-arrow-right-drop-circle-outline"></span> -->
             </div>
         </div>
         <script>
+            function loadSpriteVersions(isSprite){
+                let egg = document.getElementById('egg');
+                let isHatch = !(egg.dataset.isegg === 'true');
+                if(isHatch == false && isSprite){
+                   egg.src =  '/resources/egg-sprite.png'
+                }
+                else{
+                   egg.src =  '/resources/egg.png'
+                }
+                setEgg(isHatch, 'egg', egg.dataset.number);
+            }
+
+            let spriteCheck = document.getElementById('isSprite');
+            let isSprite = spriteCheck.checked;
+            spriteCheck.addEventListener("change", () => {
+                isSprite = spriteCheck.checked;
+                loadSpriteVersions(spriteCheck.checked);
+            });
+            loadSpriteVersions(spriteCheck.checked);
+
             setDate();
             let egg= document.getElementById('egg')
             let reroll= document.getElementById('reroll')
             egg.addEventListener("click", hatchEgg);
             reroll.addEventListener("click", () => {
-                setEgg(true);
+                setEgg(true, 'egg');
             });
             setEgg(false, 'egg');
             setTimeout(function(){
@@ -79,10 +103,12 @@
                 document.getElementById('date').innerHTML = date;
             }
 
-            async function fetchPokemon(){
-                const TOTAL_POKES = 1015;
-                let pOTD = Math.floor(Math.random() * TOTAL_POKES);
-                const url = `https://pokeapi.co/api/v2/pokemon/${pOTD}`;
+            async function fetchPokemon(pokeID = -1){
+                if(pokeID == -1){
+                    const TOTAL_POKES = 1015;
+                    pokeID = Math.floor(Math.random() * TOTAL_POKES);
+                }
+                const url = `https://pokeapi.co/api/v2/pokemon/${pokeID}`;
                 let promise = fetch(url).then((res) => res.json());
 
                 return await promise;
@@ -109,8 +135,9 @@
 
             function hatchEgg(eggID = 'egg'){
                 const hatchingEgg = document.getElementById('egg');
+                hatchingEgg.dataset.isegg = 'false';
                 document.getElementById('name').innerHTML = hatchingEgg.dataset.name;
-                document.getElementById('number').innerHTML = `# ${hatchingEgg.dataset.number}`;
+                document.getElementById('number').innerHTML = `# ${ String(hatchingEgg.dataset.number).padStart(4, '0')}`;
                 hatchingEgg.src = hatchingEgg.dataset.img;
                 applyTypes(hatchingEgg.dataset.type);
                 hatchingEgg.classList.remove('animate-bounce2');
@@ -138,30 +165,35 @@
                     document.getElementById('egg').classList.remove('animate-bounce2');
             }
 
-            function setEgg(isHatch, eggID = 'egg'){
+            function setEgg(isHatch, eggID = 'egg', pokeID = -1){
                 const hatchingEgg = document.getElementById('egg');
                 let pokemonObj = {};
 
-                let promise = fetchPokemon();
+                let promise = fetchPokemon(pokeID);
                 promise.then((result) => {
-                    const SHINY_CHANCE = 100;
-                    let isShiny = Boolean(Math.floor(Math.random() * SHINY_CHANCE) == 50);
+                    const SHINY_CHANCE = 50;
+                    let isShiny = Boolean(Math.floor(Math.random() * SHINY_CHANCE) == (SHINY_CHANCE / 2));
                     let shiny = 'default';
                     if (isShiny){
                         console.log('SHINY');
                         shiny = 'shiny';
                         hatchingEgg.dataset.shiny = true; 
                     }
+
+                    let artwork = result.sprites.other['official-artwork'][`front_${shiny}`];
+                    if(isSprite){
+                       artwork = result.sprites[`front_${shiny}`];
+                    }
                     pokemonObj =  {
                             name: result.name,
-                            image: result.sprites.other['official-artwork'][`front_${shiny}`],
+                            image: artwork,
                             type: result.types.map((type) => type.type.name).join(' '),
                             id: result.id
                         };
 
 
                         hatchingEgg.dataset.name = pokemonObj.name;
-                        hatchingEgg.dataset.number = String(pokemonObj.id).padStart(4, '0');
+                        hatchingEgg.dataset.number = pokemonObj.id;
                         hatchingEgg.dataset.img = pokemonObj.image;
                         hatchingEgg.dataset.type = pokemonObj.type;
 
