@@ -43,12 +43,18 @@
     <body>
         <div class="my-auto h-screen">
             <h2 class="text-2xl font-bold text-center mt-32 mb-12" id="date"></h2>
-            <div id="reroll" class="text-xl font-bold text-white mx-auto text-center p-6 rounded-xl mb-12 bg-red-500 w-64 shadow-xl hover:bg-red-600" role="button">
+            <a id="reroll" class="text-xl block font-bold text-white mx-auto text-center p-6 rounded-xl mb-12 bg-red-500 w-64 shadow-xl hover:bg-red-600" role="button">
                 Hatch New Egg
-            </div>
-            <div class="flex justify-center py-2 gap-2 items-center">
-                <label for="isSprite">Sprite Version</label>
-                <input class="text-center" type="checkbox" name="isSprite" id="isSprite">
+            </a>
+            <div class="flex justify-center py-2 gap-8 items-center">
+                <div>
+                    <label for="spriteToggle">Sprite Version</label>
+                    <input class="text-center" type="checkbox" name="spriteToggle" id="spriteToggle">
+                </div>
+                <div>
+                    <label for="shinyToggle">Shiny</label>
+                    <input class="text-center" type="checkbox" name="shinyToggle" id="shinyToggle">
+                </div>
             </div>
             <div class="flex justify-center my-auto h-72" id="pokedex">
                         <!-- <span id="prev" class="text-gray-500 my-auto text-5xl mdi mdi-arrow-left-drop-circle-outline"></span> -->
@@ -62,38 +68,53 @@
             </div>
         </div>
         <script>
-            function loadSpriteVersions(isSprite){
+            function toggleSprite(){
                 let egg = document.getElementById('egg');
-                let isHatch = !(egg.dataset.isegg === 'true');
-                if(isHatch == false && isSprite){
-                   egg.src =  'resources/egg-sprite.png'
+                let isEgg = (egg.dataset.isegg === 'true');
+
+                if(isEgg){
+                    if(isSprite) {
+                        egg.src = 'resources/egg-sprite.png'
+                    }
+                    else {
+                        egg.src = 'resources/egg.png'
+                    }
                 }
-                else{
-                   egg.src =  '/resources/egg.png'
-                }
-                setEgg(isHatch, 'egg', egg.dataset.number);
+
+                setEgg(false, true, egg.dataset.number);
             }
 
-            let spriteCheck = document.getElementById('isSprite');
-            let isSprite = spriteCheck.checked;
-            spriteCheck.addEventListener("change", () => {
-                isSprite = spriteCheck.checked;
-                loadSpriteVersions(spriteCheck.checked);
-            });
-            loadSpriteVersions(spriteCheck.checked);
+            function toggleShiny(){
+                let egg = document.getElementById('egg');
+                let isEgg = (egg.dataset.isegg === 'true');
+
+                if(isEgg){
+                    return false;
+                }
+
+                setEgg(false, true, egg.dataset.number);
+            }
 
             setDate();
+            setEgg(false, false);
+
+            let spriteToggle = document.getElementById('spriteToggle');
+            spriteToggle.addEventListener("change", toggleSprite);
+
+            let shinyToggle = document.getElementById('shinyToggle');
+            shinyToggle.addEventListener("change", toggleShiny);
+
             let egg= document.getElementById('egg')
+            egg.addEventListener("click", () => {hatchEgg(false)});
+
             let reroll= document.getElementById('reroll')
-            egg.addEventListener("click", hatchEgg);
-            reroll.addEventListener("click", () => {
-                setEgg(true, 'egg');
+            reroll.addEventListener("click", function clicked() {
+                setEgg(true, true, -1);
+                reroll.classList.add('bg-red-400');
+                reroll.classList.remove('hover:bg-red-600');
+                reroll.removeEventListener("click", clicked);
             });
-            setEgg(false, 'egg');
-            setTimeout(function(){
-                // egg.click();
-            },
-            500);
+
 
             function setDate(currentDate = ''){
                 let date = new Date().toDateString();
@@ -108,6 +129,7 @@
                     const TOTAL_POKES = 1015;
                     pokeID = Math.floor(Math.random() * TOTAL_POKES);
                 }
+
                 const url = `https://pokeapi.co/api/v2/pokemon/${pokeID}`;
                 let promise = fetch(url).then((res) => res.json());
 
@@ -115,14 +137,18 @@
             };
 
             function applyTypes(typeStr){
-                    const typeColors = { 'fire': 'red-600', 'water': 'blue-600', 'grass': 'green-600', 'electric': 'yellow-300', 
+                const typeColors = {
+                    'fire': 'red-600', 'water': 'blue-600', 'grass': 'green-600', 'electric': 'yellow-300',
                     'poison': 'purple-800', 'ground': 'orange-900', 'ice': 'cyan-200', 'rock': 'stone-700', 'psychic': 'fuchsia-500',
                     'ghost': 'violet-600', 'normal': 'gray-300', 'fairy': 'pink-300', 'dragon': 'indigo-500', 'steel': 'slate-400',
-                    'dark': 'stone-900', 'bug': 'lime-400', 'fighting': 'orange-600', 'flying': 'sky-300' };
+                    'dark': 'stone-900', 'bug': 'lime-400', 'fighting': 'orange-600', 'flying': 'sky-300'
+                };
 
-                    const typeTextColors = { 'fire': 'white', 'water': 'white', 'grass': 'white', 'electric': 'black', 'poison': 'white',
-                    'ground': 'white', 'ice': 'black', 'rock': 'white', 'psychic': 'white', 'ghost': 'white', 'normal': 'black','fairy': 'white',
-                    'dragon': 'white', 'steel': 'white', 'dark': 'white', 'bug': 'black', 'fighting': 'white', 'flying': 'white' };
+                const typeTextColors = {
+                    'fire': 'white', 'water': 'white', 'grass': 'white', 'electric': 'black', 'poison': 'white',
+                    'ground': 'white', 'ice': 'black', 'rock': 'white', 'psychic': 'white', 'ghost': 'white', 'normal': 'black', 'fairy': 'white',
+                    'dragon': 'white', 'steel': 'white', 'dark': 'white', 'bug': 'black', 'fighting': 'white', 'flying': 'white'
+                };
 
                 let typeBoxes = '<div class="flex gap-4 justify-center row">';
                 typeStr.split(' ').forEach((type) => {
@@ -133,7 +159,7 @@
 
             }
 
-            function hatchEgg(eggID = 'egg'){
+            function hatchEgg(isReroll, eggID = 'egg'){
                 const hatchingEgg = document.getElementById('egg');
                 hatchingEgg.dataset.isegg = 'false';
                 document.getElementById('name').innerHTML = hatchingEgg.dataset.name;
@@ -142,12 +168,32 @@
                 applyTypes(hatchingEgg.dataset.type);
                 hatchingEgg.classList.remove('animate-bounce2');
                 hatchingEgg.classList.add('group-hover:animate-bounce2');
+
                 if(hatchingEgg.dataset.shiny){
-                    celebrateShiny();
+                    addShinyFlair();
+                }
+                else{
+                    clearShinyFlair();
+                }
+
+
+
+                if(isReroll){
+                    reroll = document.getElementById('reroll')
+                    reroll.classList.add('bg-red-500');
+                    reroll.classList.remove('bg-red-400');
+                    reroll.classList.add('hover:bg-red-600');
+
+                    reroll.addEventListener("click", function clicked() {
+                        setEgg(true, true, -1);
+                        reroll.classList.add('bg-red-400');
+                        reroll.classList.remove('hover:bg-red-600');
+                        reroll.removeEventListener("click", clicked);
+                    });
                 }
             }
 
-            function celebrateShiny(){
+            function addShinyFlair(){
                     document.getElementById('number').classList.add('animate-pulse');
                     document.getElementById('name').classList.add('animate-pulse');
                     document.getElementById('card').classList.add('drop-shadow-shiny');
@@ -165,42 +211,60 @@
                     document.getElementById('egg').classList.remove('animate-bounce2');
             }
 
-            function setEgg(isHatch, eggID = 'egg', pokeID = -1){
+            function isShinyByChance(odds){
+                // console.log('SHINY!!!');
+                return Boolean(Math.floor(Math.random() * odds) == (odds / 2));
+            }
+
+            function getArtwork(pokeData, isShiny, isSprite){
+                const SHINY_CHANCE = 50;
+
+                let artwork = '';
+                let color = 'default';
+
+                if (isShiny || isShinyByChance(SHINY_CHANCE)) {
+                    color = 'shiny';
+                    document.getElementById('egg').shiny = true;
+                }
+
+                if (isSprite) {
+                    artwork = pokeData.sprites[`front_${color}`];
+                }
+                else {
+                    artwork = pokeData.sprites.other['official-artwork'][`front_${color}`];
+                }
+                
+                return artwork;
+            }
+
+            function setEgg(isReroll, isHatched, pokeID = -1){
                 const hatchingEgg = document.getElementById('egg');
                 let pokemonObj = {};
 
                 let promise = fetchPokemon(pokeID);
+                let isShiny = document.getElementById('shinyToggle').checked;
+                let isSprite = document.getElementById('spriteToggle').checked;
+
                 promise.then((result) => {
-                    const SHINY_CHANCE = 50;
-                    let isShiny = Boolean(Math.floor(Math.random() * SHINY_CHANCE) == (SHINY_CHANCE / 2));
-                    let shiny = 'default';
-                    if (isShiny){
-                        console.log('SHINY');
-                        shiny = 'shiny';
-                        hatchingEgg.dataset.shiny = true; 
+                    let artwork = getArtwork(result, isShiny, isSprite);
+
+                    pokemonObj = {
+                        name: result.name,
+                        image: artwork,
+                        type: result.types.map((type) => type.type.name).join(' '),
+                        id: result.id
+                    };
+
+                    hatchingEgg.dataset.name = pokemonObj.name;
+                    hatchingEgg.dataset.number = pokemonObj.id;
+                    hatchingEgg.dataset.img = pokemonObj.image;
+                    hatchingEgg.dataset.type = pokemonObj.type;
+
+                    if(isHatched){
+                        hatchEgg(isReroll);
                     }
-
-                    let artwork = result.sprites.other['official-artwork'][`front_${shiny}`];
-                    if(isSprite){
-                       artwork = result.sprites[`front_${shiny}`];
-                    }
-                    pokemonObj =  {
-                            name: result.name,
-                            image: artwork,
-                            type: result.types.map((type) => type.type.name).join(' '),
-                            id: result.id
-                        };
-
-
-                        hatchingEgg.dataset.name = pokemonObj.name;
-                        hatchingEgg.dataset.number = pokemonObj.id;
-                        hatchingEgg.dataset.img = pokemonObj.image;
-                        hatchingEgg.dataset.type = pokemonObj.type;
-
-                        if(isHatch){
-                            hatchEgg();
-                        }
                 });
+
             };
 
         </script>
